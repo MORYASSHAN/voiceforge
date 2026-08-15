@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  # Self-hosted LiveKit server (optional — use instead of LiveKit Cloud)
+  livekit-server:
+    image: livekit/livekit-server:latest
+    command: --dev --bind 0.0.0.0
+    ports:
+      - "7880:7880"   # WebSocket / HTTP
+      - "7881:7881"   # RTC (TCP)
+      - "50000-50060:50000-50060/udp"  # RTC (UDP)
+    environment:
+      - LIVEKIT_KEYS=devkey: secret
+    profiles:
+      - local
+
+  # Local Kokoro TTS (optional — zero-cost alternative to Groq TTS)
+  kokoro-tts:
+    image: ghcr.io/remsky/kokoro-fastapi:latest
+    ports:
+      - "8880:8880"
+    profiles:
+      - local
