@@ -18,7 +18,9 @@ The true value of VoiceForge lies in its **onboarding layer**: a guided CLI setu
 - **Guided Setup Wizard:** A beautiful, interactive CLI that walks you through getting and validating API keys.
 - **Ready-Made Personas:** Start instantly with templates like Study Buddy, Voice Journal, or Meeting Notes.
 - **Modern Web Frontend:** A sleek, dark-themed React + Vite interface with Framer Motion animations.
-- **Groq Integration:** Blazing-fast inference using Groq for STT, LLM, and TTS.
+- **Groq Integration:** Blazing-fast inference using Groq for STT, LLM, and TTS (talks directly to Groq's API, not through a hosted gateway).
+- **Real Barge-In:** Silero VAD + VAD-based interruption, so you can talk over the agent mid-reply.
+- **Latency & Usage Metrics:** Per-turn end-to-end latency and session token usage logged out of the box.
 - **Self-Hostable:** Optional Docker Compose setup for running your own LiveKit server and local TTS (Kokoro).
 
 ---
@@ -46,6 +48,10 @@ voiceforge/
 - **Groq API Key:** Get it free at [console.groq.com/keys](https://console.groq.com/keys)
 - **LiveKit Cloud Account:** Get it free at [cloud.livekit.io](https://cloud.livekit.io) (or self-host via Docker)
 
+> ⚠️ **Groq account setup (one-time, easy to miss):**
+> - The TTS voice model requires accepting terms before it'll work: open [console.groq.com/playground?model=canopylabs%2Forpheus-v1-english](https://console.groq.com/playground?model=canopylabs%2Forpheus-v1-english) and click accept. Without this, TTS calls fail with `model_terms_required` and the agent session closes.
+> - Groq's available model lineup changes over time. If `LLM_MODEL`/`STT_MODEL`/`TTS_MODEL` in your `.env` reference a model that's been deprecated, calls fail with `model_not_found`. Check `https://api.groq.com/openai/v1/models` (with your key) for what's currently available, or just leave these unset to use the tested defaults in `agent/main.py`.
+
 ### 1. Clone & Install
 ```bash
 git clone https://github.com/yourusername/voiceforge.git
@@ -62,7 +68,11 @@ python cli/wizard.py
 ```
 
 ### 3. Start the Services
-Open three separate terminals in the `voiceforge` directory.
+All three services must be running — the token server and web UI alone are **not** enough; the agent worker is the actual "brain" and won't join calls if it isn't running.
+
+**Fastest path (Windows):** run `start_all.bat` in the project root. It launches the token server, agent worker, and web UI each in their own window.
+
+**Manual path:** open three separate terminals in the `voiceforge` directory.
 
 **Terminal 1: Token Server**
 ```bash
@@ -85,7 +95,9 @@ npm install
 npm run dev
 ```
 
-Visit `http://localhost:5173` in your browser. Click **Start Voice Dialogue** to talk to your new AI agent!
+Visit `http://localhost:3000` in your browser. Click **INITIATE_LINK** to talk to your new AI agent!
+
+> ℹ️ The token server automatically dispatches the agent to whichever room you connect to (via LiveKit's explicit agent dispatch API), so you don't need to run any separate `lk dispatch` commands.
 
 ---
 

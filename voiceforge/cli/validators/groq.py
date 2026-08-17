@@ -1,20 +1,29 @@
 import urllib.request
 import urllib.error
 import json
+from typing import Tuple
 
-def validate_groq_key(api_key: str) -> tuple[bool, str]:
-    """Returns (success: bool, message: str)"""
+def validate_groq_key(api_key: str) -> Tuple[bool, str]:
+    """
+    Validates a Groq API key by querying the Groq models endpoint.
+    Returns (success: bool, message: str)
+    """
     if not api_key:
         return False, "API key cannot be empty"
         
+    api_key = api_key.strip()
     url = "https://api.groq.com/openai/v1/models"
-    req = urllib.request.Request(url, headers={
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    })
+    req = urllib.request.Request(
+        url,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "User-Agent": "VoiceForge-Setup/1.0",
+        }
+    )
     
     try:
-        with urllib.request.urlopen(req) as response:
+        with urllib.request.urlopen(req, timeout=10) as response:
             if response.status == 200:
                 return True, "Groq API key validated successfully"
             else:
