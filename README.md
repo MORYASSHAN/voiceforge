@@ -48,7 +48,7 @@ voiceforge/
 
 ### 1. Clone & Install
 ```bash
-git clone https://github.com/yourusername/voiceforge.git
+git clone https://github.com/MORYASSHAN/voiceforge.git
 cd voiceforge
 
 # Install CLI dependencies
