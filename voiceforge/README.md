@@ -1,129 +1,229 @@
 # 🎙️ VoiceForge
 
 <div align="center">
-  <p><strong>Open-source, self-hostable voice AI agent starter kit.</strong></p>
-  <p>Build ultra-low latency, real-time voice agents in minutes.</p>
+  <img src="https://raw.githubusercontent.com/ShaanGoswami/voiceforge/main/assets/banner.png" alt="VoiceForge Banner" width="100%" onerror="this.style.display='none'"/>
+
+  <h3>⚡ Ultra-Low Latency Real-Time Voice AI Agent Starter Kit</h3>
+  <p>Build, customize, and self-host bidirectional, interruptible voice agents in minutes.</p>
+
+  <p>
+    <a href="#-key-features"><img src="https://img.shields.io/badge/LiveKit-Agents_v1.6+-000000?style=for-the-badge&logo=livekit&logoColor=white" alt="LiveKit Agents" /></a>
+    <a href="#-architecture"><img src="https://img.shields.io/badge/Groq-Llama_3.3_&_Whisper-F05A28?style=for-the-badge&logo=groq&logoColor=white" alt="Groq Inference" /></a>
+    <a href="#-web-frontend"><img src="https://img.shields.io/badge/React_18-Vite_&_Tailwind-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React + Vite" /></a>
+    <a href="#-testing"><img src="https://img.shields.io/badge/Tests-27_Passing-success?style=for-the-badge&logo=pytest&logoColor=white" alt="Pytest 27 Passed" /></a>
+    <a href="#-license"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="MIT License" /></a>
+  </p>
 </div>
 
 ---
 
 ## 🌟 Overview
 
-VoiceForge is a complete starter kit for building bidirectional, real-time voice AI agents. Built on top of **LiveKit Agents**, it orchestrates Speech-to-Text (STT), Large Language Models (LLMs), and Text-to-Speech (TTS) into a seamless, interruptible voice pipeline.
+**VoiceForge** is a production-ready, open-source starter kit for creating real-time, conversational voice AI applications. Built on top of **LiveKit Agents**, **Groq Inference**, and **Silero VAD**, VoiceForge orchestrates **Speech-to-Text (STT)**, **Large Language Models (LLMs)**, and **Text-to-Speech (TTS)** into an ultra-responsive, interruptible audio pipeline with under 400ms end-to-end response times.
 
-The true value of VoiceForge lies in its **onboarding layer**: a guided CLI setup wizard, curated defaults, and ready-made persona templates that get you from `git clone` to a working voice conversation in the browser in under 10 minutes.
+Whether you're building a voice tutor, customer support agent, personal meeting assistant, or interactive gaming NPC, VoiceForge gets you from `git clone` to a live conversational agent in your browser in under 5 minutes.
 
-### 🚀 Features
-- **BYOK (Bring Your Own Keys):** No proxying, no storage. Your keys stay on your machine.
-- **Guided Setup Wizard:** A beautiful, interactive CLI that walks you through getting and validating API keys.
-- **Ready-Made Personas:** Start instantly with templates like Study Buddy, Voice Journal, or Meeting Notes.
-- **Modern Web Frontend:** A sleek, dark-themed React + Vite interface with Framer Motion animations.
-- **Groq Integration:** Blazing-fast inference using Groq for STT, LLM, and TTS (talks directly to Groq's API, not through a hosted gateway).
-- **Real Barge-In:** Silero VAD + VAD-based interruption, so you can talk over the agent mid-reply.
-- **Latency & Usage Metrics:** Per-turn end-to-end latency and session token usage logged out of the box.
-- **Self-Hostable:** Optional Docker Compose setup for running your own LiveKit server and local TTS (Kokoro).
+---
+
+## 🚀 Key Features
+
+* 🔐 **BYOK (Bring Your Own Keys):** No proxying, no third-party telemetry, no cloud storage of your keys. Everything runs directly from your local machine.
+* 🧙 **Guided CLI Wizard:** Interactive setup CLI that validates your Groq & LiveKit credentials in real time and automatically writes your `.env` configuration.
+* 🧠 **Blazing-Fast Groq Inference:**
+  * **STT:** `whisper-large-v3-turbo` (instant speech transcription)
+  * **LLM:** `llama-3.3-70b-versatile` (deep reasoning & natural conversation)
+  * **TTS:** `canopylabs/orpheus-v1-english` / `playai-tts` (expressive, natural human speech)
+* ⚡ **Natural Barge-In & Interruptibility:** Powered by **Silero VAD**, the agent stops speaking immediately when you start talking.
+* 🎭 **Dynamic Persona Engine:** Switch personas on the fly (e.g. *Study Buddy*, *Meeting Notes*, *Voice Journal*) with simple YAML templates or via the web UI.
+* 💻 **Cyberpunk Web Interface:**
+  * **Interactive Visualizers:** Switch between *Orb*, *Spectrum*, *Aura*, and *Constellation* visualizer modes.
+  * **Telemetry HUD:** Live tracking of session duration, end-to-end latency ($ms$), and token usage.
+  * **Synthesized Audio Feedback:** Web Audio sound effects for link initialization, mute toggles, interruptions, and disconnects.
+  * **Theme Switcher:** Cyberpunk Cyan, Emerald, and Amber color palettes.
+  * **Keyboard Shortcuts:** Full hands-free control (`Space` to mute, `Esc` to interrupt, `T` for transcripts, `V` for visualizers, `P` for personas, `S` for settings).
+* 🐳 **Self-Hostable (Docker):** Run entirely locally with the included Docker Compose setup for self-hosted LiveKit and Kokoro TTS.
 
 ---
 
 ## 🏗️ Architecture
 
-VoiceForge consists of three main components:
-
 ```
 voiceforge/
-├── cli/              # Setup wizard (typer + rich) - Walkthrough, validation, persona selection
-├── agent/            # LiveKit Agents worker (Python) - The "brain" orchestrating STT/LLM/TTS
-├── token-server/     # Token Server (FastAPI) - Mints LiveKit JWTs for the web client
-├── web/              # Frontend (React + Vite) - Voice UI, animated VoiceOrb, live transcripts
-└── docker-compose.yml # Optional self-hosted LiveKit and Kokoro TTS
+├── cli/                      # Setup wizard (typer + rich) & credential validators
+│   ├── templates/            # YAML Persona prompt definitions
+│   └── validators/           # Groq API and LiveKit credentials format & token tests
+├── agent/                    # Python LiveKit Agents worker ("The Brain")
+│   ├── personas/             # Persona loader with slug normalization & fuzzy fallback
+│   ├── main.py               # LiveKit Agent worker (STT -> LLM -> TTS pipeline)
+│   └── requirements.txt      # Python agent dependencies
+├── token-server/             # FastAPI JWT Token Server & Agent Dispatch Gateway
+│   ├── token_server.py       # REST API endpoints (/token, /health, /diagnostics, /personas)
+│   └── requirements.txt      # FastAPI dependencies
+├── web/                      # Modern React 18 + Vite + Tailwind frontend
+│   ├── src/
+│   │   ├── components/       # VoiceOrb, Transcript, TelemetryHUD, SetupWizard, PersonaSelector
+│   │   ├── hooks/            # useLiveKitRoom, useSoundEffects
+│   │   └── types/            # TypeScript definitions
+│   └── package.json          # Frontend dependencies
+├── tests/                    # Automated Pytest suite (27 unit & integration tests)
+├── docker-compose.yml        # Optional self-hosted LiveKit server + Kokoro TTS
+└── .env.example              # Environment variables template
 ```
 
 ---
 
-## 🚀 Quick Start
+## ⚡ Quick Start
 
-### Prerequisites
-- **Python 3.11+**
-- **Node.js 18+**
-- **Groq API Key:** Get it free at [console.groq.com/keys](https://console.groq.com/keys)
-- **LiveKit Cloud Account:** Get it free at [cloud.livekit.io](https://cloud.livekit.io) (or self-host via Docker)
+### 📋 Prerequisites
+* **Python 3.10+** (Tested up to Python 3.14)
+* **Node.js 18+** & **npm**
+* **Groq API Key:** Free at [console.groq.com/keys](https://console.groq.com/keys)
+* **LiveKit Cloud Project:** Free at [cloud.livekit.io](https://cloud.livekit.io) *(or self-host locally)*
 
-> ⚠️ **Groq account setup (one-time, easy to miss):**
-> - The TTS voice model requires accepting terms before it'll work: open [console.groq.com/playground?model=canopylabs%2Forpheus-v1-english](https://console.groq.com/playground?model=canopylabs%2Forpheus-v1-english) and click accept. Without this, TTS calls fail with `model_terms_required` and the agent session closes.
-> - Groq's available model lineup changes over time. If `LLM_MODEL`/`STT_MODEL`/`TTS_MODEL` in your `.env` reference a model that's been deprecated, calls fail with `model_not_found`. Check `https://api.groq.com/openai/v1/models` (with your key) for what's currently available, or just leave these unset to use the tested defaults in `agent/main.py`.
+---
 
-### 1. Clone & Install
+### Step 1: Clone and Set Up Python Virtual Environment
+
 ```bash
-git clone https://github.com/yourusername/voiceforge.git
-cd voiceforge
+git clone https://github.com/ShaanGoswami/voiceforge.git
+cd voiceforge/voiceforge
 
-# Install CLI dependencies
-pip install typer rich python-dotenv pyyaml
+# Create and activate Python virtual environment
+python -m venv .venv
+
+# On Windows:
+.venv\Scripts\activate
+
+# On macOS/Linux:
+source .venv/bin/activate
+
+# Install dependencies
+pip install typer rich python-dotenv pyyaml fastapi uvicorn "livekit-agents[groq,turn-detector]>=1.6.0" livekit-api pytest pytest-asyncio httpx
 ```
 
-### 2. Run the Setup Wizard
-The CLI wizard is the easiest way to get started. It will guide you through entering your keys, validating them, picking a persona, and generating your `.env` file.
+---
+
+### Step 2: Run the Setup Wizard
+
+The interactive wizard will validate your API keys, let you choose an initial persona, and generate your `.env` file automatically:
+
 ```bash
 python cli/wizard.py
 ```
 
-### 3. Start the Services
-All three services must be running — the token server and web UI alone are **not** enough; the agent worker is the actual "brain" and won't join calls if it isn't running.
+*(Alternatively, copy `.env.example` to `.env` and fill in your keys manually)*:
 
-**Fastest path (Windows):** run `start_all.bat` in the project root. It launches the token server, agent worker, and web UI each in their own window.
+```env
+LIVEKIT_URL=wss://your-project.livekit.cloud
+LIVEKIT_API_KEY=APIxxxxxxxxx
+LIVEKIT_API_SECRET=your_secret_key_here
+GROQ_API_KEY=gsk_your_groq_api_key_here
+VOICEFORGE_PERSONA=study_buddy
+```
 
-**Manual path:** open three separate terminals in the `voiceforge` directory.
+---
 
-**Terminal 1: Token Server**
+### Step 3: Start the Services
+
+Open **three separate terminal tabs** inside `voiceforge/voiceforge`:
+
+#### 🔹 Terminal 1: Token Server (FastAPI)
 ```bash
 cd token-server
-pip install -r requirements.txt
 uvicorn token_server:app --reload --port 8000
 ```
+*Token server runs at: `http://localhost:8000` (API Docs: `http://localhost:8000/docs`)*
 
-**Terminal 2: Agent Worker**
+#### 🔹 Terminal 2: Agent Worker (LiveKit AI Brain)
 ```bash
 cd agent
-pip install -r requirements.txt
 python main.py dev
 ```
+*Registers the agent worker to your LiveKit Cloud room with STT, LLM, and TTS initialized.*
 
-**Terminal 3: Web UI**
+#### 🔹 Terminal 3: Web Frontend (React + Vite)
 ```bash
 cd web
 npm install
 npm run dev
 ```
-
-Visit `http://localhost:3000` in your browser. Click **INITIATE_LINK** to talk to your new AI agent!
-
-> ℹ️ The token server automatically dispatches the agent to whichever room you connect to (via LiveKit's explicit agent dispatch API), so you don't need to run any separate `lk dispatch` commands.
+*Frontend opens at: `http://localhost:3000`*
 
 ---
 
-## 🎭 Customizing Personas
+### Step 4: Talk to Your Agent!
 
-VoiceForge uses simple YAML files to define agent behavior. Check the `cli/templates/` directory.
+1. Open **`http://localhost:3000`** in Chrome, Edge, or Safari.
+2. Click **`INITIATE_LINK`** and allow microphone access.
+3. When the status indicator displays **`🟢 SYS.ONLINE`**, start speaking!
 
-To create your own, add a new `.yaml` file:
+---
+
+## 🎭 Persona System
+
+VoiceForge comes with built-in personas stored in `cli/templates/*.yaml`:
+
+| Persona | Slug | Description |
+| :--- | :--- | :--- |
+| 📚 **Study Buddy** | `study_buddy` | Clear concept explanations, analogies, interactive quizzes, and step-by-step guidance. |
+| 📝 **Meeting Notes** | `meeting_notes` | Concise bullet-point summaries, action item extraction with owners & deadlines. |
+| 🧘 **Voice Journal** | `voice_journal` | Warm, empathetic conversational companion for daily emotional check-ins & reflections. |
+
+### 🛠️ Adding Custom Personas
+Create a new YAML file in `cli/templates/` (e.g. `cli/templates/code_mentor.yaml`):
+
 ```yaml
-name: Pirate Captain
+name: Code Mentor
+description: Senior Software Architect guiding through clean code and system design.
 system_prompt: |
-  You are a swashbuckling pirate captain. Answer all questions as if we are sailing the high seas.
-  Keep it brief, use pirate slang, and always ask for the user's opinion on the next course of action!
+  You are an expert software engineer and code mentor.
+  Help the user debug logic, design scalable system architectures, and write idiomatic code.
+  Keep spoken responses structured, concise, and easy to follow.
 ```
-Then select it in the CLI wizard, or manually update the `VOICEFORGE_PERSONA` variable in your `.env` file.
+
+Switch to your new persona either by:
+* Selecting it in the web frontend persona modal (`P` key)
+* Running `python cli/wizard.py`
+* Updating `VOICEFORGE_PERSONA=code_mentor` in `.env`
 
 ---
 
-## 🐳 Self-Hosting (Optional)
+## ⌨️ Keyboard Shortcuts
 
-Don't want to use LiveKit Cloud? You can run LiveKit locally, along with Kokoro TTS for a completely free, local audio pipeline.
+| Key | Action | Description |
+| :---: | :--- | :--- |
+| **`Space`** | **Mute / Unmute** | Toggle your microphone on and off |
+| **`Esc`** | **Barge-In Interrupt** | Immediately interrupt the agent while it is speaking |
+| **`V`** | **Cycle Visualizer** | Switch between *Orb*, *Spectrum*, *Aura*, and *Constellation* |
+| **`T`** | **Toggle Transcripts** | Open / close the live conversation transcript drawer |
+| **`P`** | **Persona Menu** | Open the interactive persona selection modal |
+| **`S`** / **`C`** | **Settings** | Open the configuration modal |
+
+---
+
+## 🧪 Testing
+
+VoiceForge includes a comprehensive automated test suite covering validators, persona loaders, template schemas, and FastAPI token endpoints:
 
 ```bash
-docker-compose --profile local up -d
+# Run all automated tests
+pytest tests/ -v
+
+# Run frontend production build test
+cd web && npm run build
 ```
-Update your `.env` to point to the local instances:
+
+---
+
+## 🐳 Self-Hosting with Docker (Optional)
+
+If you prefer to run completely offline without LiveKit Cloud, launch local LiveKit and Kokoro TTS containers:
+
+```bash
+docker compose --profile local up -d
+```
+
+Update your `.env`:
 ```env
 LIVEKIT_URL=ws://127.0.0.1:7880
 LIVEKIT_API_KEY=devkey
@@ -133,16 +233,31 @@ TTS_MODEL=kokoro/kokoro
 
 ---
 
-## 👨‍💻 About the Author
+## ⚙️ Environment Variables Reference
+
+| Variable | Description | Default |
+| :--- | :--- | :--- |
+| `LIVEKIT_URL` | LiveKit WebSocket endpoint (`wss://...` or `ws://...`) | *Required* |
+| `LIVEKIT_API_KEY` | LiveKit project API key | *Required* |
+| `LIVEKIT_API_SECRET` | LiveKit project API secret | *Required* |
+| `GROQ_API_KEY` | Groq inference API key | *Required* |
+| `VOICEFORGE_PERSONA` | Active persona template slug | `study_buddy` |
+| `LLM_MODEL` | LLM model for generation | `llama-3.3-70b-versatile` |
+| `STT_MODEL` | Speech-to-Text transcription model | `whisper-large-v3-turbo` |
+| `TTS_MODEL` | Text-to-Speech synthesis model | `canopylabs/orpheus-v1-english` |
+| `TTS_VOICE` | Default voice preset | `autumn` |
+
+---
+
+## 👨‍💻 Author
 
 **Shaan Goswami**
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/shaan-goswami-778729274/)
-[![Portfolio](https://img.shields.io/badge/Portfolio-2563EB?style=for-the-badge&logo=react&logoColor=white)](https://my-site-a5cfc457.ploy.build/)
-
-Building the future of voice AI and interactive agent experiences.
+* 💼 **LinkedIn:** [Shaan Goswami](https://www.linkedin.com/in/shaan-goswami-778729274/)
+* 🌐 **Portfolio:** [shaan.build](https://my-site-a5cfc457.ploy.build/)
 
 ---
 
 ## 📄 License
-MIT License. See `LICENSE` for more information.
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.

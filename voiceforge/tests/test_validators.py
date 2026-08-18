@@ -36,6 +36,6 @@ def test_livekit_validator_short_key():
     assert "too short" in msg
 
 def test_livekit_validator_valid_format():
-    success, msg = validate_livekit_creds("wss://myproject.livekit.cloud", "APItest123", "secretkey12345678901234567890")
+    success, msg = validate_livekit_creds("wss://myproject.livekit.cloud", "APItest123456", "secretkey1234567890123456789012345678")
     assert success
     assert "validated successfully" in msg

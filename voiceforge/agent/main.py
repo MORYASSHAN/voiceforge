@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 import logging
 from dotenv import load_dotenv
 
@@ -53,11 +54,25 @@ server = AgentServer(setup_fnc=_prewarm)
 async def voiceforge_session(ctx: JobContext):
     ctx.log_context_fields = {"room": ctx.room.name}
     
-    # Load persona dynamically with fallback
+    # 1. Determine persona from room metadata or environment variable
     persona_name = os.getenv("VOICEFORGE_PERSONA", "study_buddy")
     try:
+        # Check if job metadata specifies a custom persona
+        job_meta = getattr(ctx, "job", None)
+        if job_meta and getattr(job_meta, "metadata", None):
+            parsed_meta = json.loads(job_meta.metadata)
+            if isinstance(parsed_meta, dict) and "persona" in parsed_meta:
+                persona_name = parsed_meta["persona"]
+        elif ctx.room.metadata:
+            parsed_room_meta = json.loads(ctx.room.metadata)
+            if isinstance(parsed_room_meta, dict) and "persona" in parsed_room_meta:
+                persona_name = parsed_room_meta["persona"]
+    except Exception as e:
+        logger.debug(f"Could not parse session metadata: {e}")
+
+    try:
         persona = load_persona(persona_name)
-        logger.info(f"Loaded persona: {persona.get('name', persona_name)}")
+        logger.info(f"Loaded persona for room '{ctx.room.name}': {persona.get('name', persona_name)}")
     except Exception as e:
         logger.warning(f"Could not load persona '{persona_name}': {e}. Using fallback default.")
         persona = load_persona("default")
@@ -72,11 +87,6 @@ async def voiceforge_session(ctx: JobContext):
         vad=ctx.proc.userdata["vad"],
         turn_handling=TurnHandlingOptions(
             turn_detection=inference.TurnDetector(),
-            # Groq's STT is a non-streaming (batch) API, so the "adaptive"
-            # interruption mode can never activate (it requires a streaming,
-            # aligned-transcript STT to gatekeep barge-in) and would silently
-            # no-op. "vad" mode only needs a VAD model, which we provide above,
-            # so it actually enables the user interrupting the agent mid-reply.
             interruption={"mode": "vad"},
             preemptive_generation={"enabled": True},
         ),
@@ -87,14 +97,25 @@ async def voiceforge_session(ctx: JobContext):
         if isinstance(ev.item, llm.ChatMessage) and ev.item.role == "assistant":
             e2e = ev.item.metrics.get("e2e_latency")
             if e2e is not None:
-                logger.info(f"reply latency (end of turn -> first audio): {e2e:.3f}s")
+                logger.info(f"Turn reply latency (E2E): {e2e:.3f}s")
+                # Broadcast telemetry packet over data channel
+                try:
+                    if ctx.room and ctx.room.local_participant:
+                        telemetry_packet = json.dumps({
+                            "type": "telemetry",
+                            "e2e_latency": round(e2e * 1000),
+                            "timestamp": int(os.getenv("TIMESTAMP", "0")),
+                        }).encode("utf-8")
+                        ctx.room.local_participant.publish_data(telemetry_packet)
+                except Exception as pub_err:
+                    logger.debug(f"Telemetry broadcast notice: {pub_err}")
 
     @session.on("session_usage_updated")
     def _on_session_usage_updated(ev: SessionUsageUpdatedEvent):
-        logger.debug(f"session usage: {ev.usage}")
+        logger.debug(f"Session usage: {ev.usage}")
 
     async def log_usage():
-        logger.info(f"final session usage: {session.usage}")
+        logger.info(f"Final session usage for room '{ctx.room.name}': {session.usage}")
 
     ctx.add_shutdown_callback(log_usage)
 
@@ -103,3 +124,4 @@ async def voiceforge_session(ctx: JobContext):
 
 if __name__ == "__main__":
     cli.run_app(server)
+

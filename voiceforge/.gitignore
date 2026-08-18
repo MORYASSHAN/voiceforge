@@ -1,0 +1,120 @@
+# ====================================================================
+# VoiceForge - Comprehensive .gitignore
+# ====================================================================
+
+# --------------------------------------------------------------------
+# Environment Variables & Secrets (CRITICAL: NEVER COMMIT API KEYS)
+# --------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+
+# --------------------------------------------------------------------
+# Python Virtual Environments & Packages
+# --------------------------------------------------------------------
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+bin/
+include/
+lib/
+lib64/
+share/
+pyvenv.cfg
+
+# Python Build & Distribution
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+parts/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+.coverage.*
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.pytype/
+
+# --------------------------------------------------------------------
+# Node.js & Frontend Web Assets (React / Vite)
+# --------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Vite / Build outputs
+dist/
+dist-ssr/
+.vite/
+*.tsbuildinfo
+.turbo/
+
+# --------------------------------------------------------------------
+# Logs & Diagnostic Dumps
+# --------------------------------------------------------------------
+logs/
+*.log
+*.pid
+*.seed
+*.pid.lock
+dumps/
+recordings/
+
+# --------------------------------------------------------------------
+# Operating System & File System Artifacts
+# --------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# --------------------------------------------------------------------
+# IDE & Code Editor Metadata
+# --------------------------------------------------------------------
+.idea/
+*.sublime-workspace
+*.sublime-project
+*.swp
+*.swo
+*~
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
