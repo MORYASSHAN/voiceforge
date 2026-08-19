@@ -12,10 +12,10 @@ def _normalize_key(text: str) -> str:
     """Normalize a name/slug for fuzzy matching: lowercase, strip non-alphanumeric."""
     return re.sub(r'[^a-z0-9]', '', text.lower())
 
-def load_persona(name: str) -> Dict[str, Any]:
+def load_persona(name: str, fallback: bool = False) -> Dict[str, Any]:
     """
     Loads a persona configuration dictionary by slug, filename, or display name.
-    If 'default' or not found, provides an intelligent fallback.
+    If 'default', empty, or fallback=True when not found, provides an intelligent fallback.
     """
     templates_dir = _get_templates_dir()
     
@@ -33,7 +33,9 @@ def load_persona(name: str) -> Dict[str, Any]:
         
         # Look for study_buddy or first available template
         available = get_available_personas()
-        if available:
+        if available and "study_buddy" in available:
+            return load_persona("study_buddy")
+        elif available:
             return load_persona(available[0])
             
         return {
@@ -85,6 +87,17 @@ def load_persona(name: str) -> Dict[str, Any]:
                                 return data
                 except Exception:
                     continue
+
+    if fallback:
+        available = get_available_personas()
+        if available and "study_buddy" in available:
+            return load_persona("study_buddy")
+        elif available:
+            return load_persona(available[0])
+        return {
+            "name": name.replace("_", " ").title() if name else "Default Assistant",
+            "system_prompt": "You are a helpful, warm, and concise voice AI assistant. Keep responses natural and conversational."
+        }
 
     raise FileNotFoundError(f"Persona '{name}' not found in {templates_dir}. Available personas: {get_available_personas()}")
 

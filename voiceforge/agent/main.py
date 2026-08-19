@@ -37,12 +37,21 @@ logging.basicConfig(level=logging.INFO)
 
 class VoiceForgeAgent(Agent):
     def __init__(self, persona: dict) -> None:
-        llm_model = os.getenv("LLM_MODEL", "llama-3.3-70b-versatile").removeprefix("groq/")
+        llm_model = os.getenv("LLM_MODEL", "openai/gpt-oss-120b")
+        if llm_model.startswith("groq/"):
+            llm_model = llm_model[5:]
         instructions = persona.get("system_prompt", "You are a helpful and concise voice assistant.")
-        super().__init__(
-            llm=groq.LLM(model=llm_model),
-            instructions=instructions,
-        )
+        try:
+            super().__init__(
+                llm=groq.LLM(model=llm_model),
+                instructions=instructions,
+            )
+        except Exception as e:
+            logger.warning(f"Failed to init LLM with {llm_model}: {e}. Falling back to openai/gpt-oss-120b.")
+            super().__init__(
+                llm=groq.LLM(model="openai/gpt-oss-120b"),
+                instructions=instructions,
+            )
 
 def _prewarm(proc) -> None:
     # Load the VAD model once per worker process instead of per-call.
@@ -77,8 +86,12 @@ async def voiceforge_session(ctx: JobContext):
         logger.warning(f"Could not load persona '{persona_name}': {e}. Using fallback default.")
         persona = load_persona("default")
     
-    stt_model = os.getenv("STT_MODEL", "whisper-large-v3-turbo").removeprefix("groq/")
-    tts_model = os.getenv("TTS_MODEL", "canopylabs/orpheus-v1-english").removeprefix("groq/")
+    stt_model = os.getenv("STT_MODEL", "whisper-large-v3-turbo")
+    if stt_model.startswith("groq/"):
+        stt_model = stt_model[5:]
+    tts_model = os.getenv("TTS_MODEL", "canopylabs/orpheus-v1-english")
+    if tts_model.startswith("groq/"):
+        tts_model = tts_model[5:]
     tts_voice = os.getenv("TTS_VOICE", "autumn")
 
     session = AgentSession(

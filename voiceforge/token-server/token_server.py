@@ -165,16 +165,19 @@ def get_personas():
 
 @app.get("/personas/{slug}")
 def get_persona_by_slug(slug: str):
+    clean_slug = re.sub(r'[^a-z0-9_-]', '', slug.lower().strip())
+    if not clean_slug:
+        raise HTTPException(status_code=400, detail="Invalid persona slug")
     templates_dir = os.path.join(_root_dir, "cli", "templates")
-    filepath = os.path.join(templates_dir, f"{slug}.yaml")
+    filepath = os.path.join(templates_dir, f"{clean_slug}.yaml")
     if not os.path.exists(filepath):
         raise HTTPException(status_code=404, detail=f"Persona '{slug}' not found")
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             data = yaml.safe_load(f)
             return {
-                "slug": slug,
-                "name": data.get("name", slug),
+                "slug": clean_slug,
+                "name": data.get("name", clean_slug),
                 "system_prompt": data.get("system_prompt", ""),
                 "description": data.get("description", None),
             }
